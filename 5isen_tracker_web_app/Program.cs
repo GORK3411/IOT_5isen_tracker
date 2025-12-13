@@ -1,3 +1,6 @@
+using _5isen_tracker_dll.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace _5isen_tracker_web_app
 {
     public class Program
@@ -8,6 +11,16 @@ namespace _5isen_tracker_web_app
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            var connectionString = builder.Configuration.GetConnectionString("Default");
+
+            builder.Services.AddDbContext<MyApplicationDbContext>(options =>
+                options.UseNpgsql(
+                    connectionString,
+                    b => b.MigrationsAssembly("5isen_tracker_dll")
+                )
+            );
+
 
             var app = builder.Build();
 

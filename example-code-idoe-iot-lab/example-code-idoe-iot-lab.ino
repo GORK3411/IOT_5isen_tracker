@@ -29,7 +29,6 @@
 
 // Change this!
 // This should be in little endian format.
-//ca de e3 af 1c de ad 0b
 static const u1_t PROGMEM DEVEUI[8] = {0x79, 0x7F, 0x80, 0x83, 0xFD, 0x28, 0x64, 0x5B};
 void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
@@ -44,7 +43,7 @@ void os_getDevKey (u1_t* buf) {
 static osjob_t sendjob;
 
 // Schedule TX every this many seconds
-const unsigned TX_INTERVAL = 40;
+const unsigned TX_INTERVAL = 7;
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
