@@ -11,6 +11,18 @@ import csv
 from matplotlib.dates import DateFormatter
 import matplotlib.pyplot as plt
 import socket
+import psycopg2
+
+# -------------------------------
+# PostgreSQL connection
+# -------------------------------
+conn = psycopg2.connect(
+    host="localhost",     # ou l'IP du serveur PostgreSQL
+    database="IoTProject",
+    user="postgres",
+    password="NoelNoel"
+)
+cursor = conn.cursor()
 
 
 mqtt_borker_address = "212.98.137.194"
@@ -39,6 +51,16 @@ def on_message(client, userdata, msg):
     if 'data' not in data.keys():
         return 0
 
+    decoded = base64.b64decode(data['data']).decode('utf-8', errors='ignore')
+    print(decoded)
+    cursor.execute(
+    "INSERT INTO sensor_data(payload) VALUES(%s)",
+    (decoded,)
+    )
+
+        
+    conn.commit()
+    print("✅ Data inserted into PostgreSQL")
     #Partie pas obligatoire a faire , elle sert uniquement a envoyer les donne a EmonCMS un site web qui permet de visualier les données
     """
     #json_payload = base64.b64decode(data['data'])
