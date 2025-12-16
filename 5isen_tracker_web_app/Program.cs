@@ -1,4 +1,6 @@
+using _5isen_tracker_dll.Contents;
 using _5isen_tracker_dll.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace _5isen_tracker_web_app
@@ -21,6 +23,13 @@ namespace _5isen_tracker_web_app
                 )
             );
 
+            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+            { 
+                options.SignIn.RequireConfirmedAccount = false;
+            })
+                //.AddRoles<IdentityRole>() // we don't have roles
+            .AddEntityFrameworkStores<MyApplicationDbContext>();;
+
 
             var app = builder.Build();
 
@@ -38,12 +47,21 @@ namespace _5isen_tracker_web_app
             app.UseAuthorization();
 
             app.MapStaticAssets();
+
+            app.MapRazorPages();
+
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}")
                 .WithStaticAssets();
 
-            app.Run();
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                UserSeeder.SeeUsersAsync(services).Wait();  
+            }
+
+                app.Run();
         }
     }
 }
