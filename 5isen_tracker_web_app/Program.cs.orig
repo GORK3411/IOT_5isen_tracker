@@ -2,6 +2,7 @@ using _5isen_tracker_dll.Contents;
 using _5isen_tracker_dll.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using _5isen_tracker_web_app.Data;
 
 namespace _5isen_tracker_web_app
 {
@@ -19,18 +20,21 @@ namespace _5isen_tracker_web_app
             builder.Services.AddDbContext<MyApplicationDbContext>(options =>
                 options.UseNpgsql(
                     connectionString,
-                    b => b.MigrationsAssembly("5isen_tracker_dll")
+                    b => b.MigrationsAssembly("5isen_tracker_web_app")
                 )
             );
 
+<<<<<<< HEAD
+=======
             builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-            {
+            { 
                 options.SignIn.RequireConfirmedAccount = false;
             })
-            //.AddRoles<IdentityRole>() // we don't have roles
-            .AddEntityFrameworkStores<MyApplicationDbContext>(); ;
+                //.AddRoles<IdentityRole>() // we don't have roles
+            .AddEntityFrameworkStores<MyApplicationDbContext>();;
 
 
+>>>>>>> main
             var app = builder.Build();
 
             // ✅ Seed database (only in Development)
@@ -39,10 +43,6 @@ namespace _5isen_tracker_web_app
                 using var scope = app.Services.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
                 await DbSeeder.SeedAsync(db);
-                
-                var serviceProvider = scope.ServiceProvider.GetRequiredService<IServiceProvider>();
-                UserSeeder.SeeUsersAsync(serviceProvider);
-
             }
 
             // Configure the HTTP request pipeline.
@@ -69,10 +69,10 @@ namespace _5isen_tracker_web_app
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                UserSeeder.SeeUsersAsync(services).Wait();
+                UserSeeder.SeeUsersAsync(services).Wait();  
             }
 
-            app.Run();
+                app.Run();
         }
     }
 }

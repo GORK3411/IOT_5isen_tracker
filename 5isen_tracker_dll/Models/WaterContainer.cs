@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
 
 namespace _5isen_tracker_dll.Models;
 
@@ -7,8 +8,8 @@ public class WaterContainer
     public int Id { get; set; }
 
     // Owner (since only 1 user can own a container)
-    public int UserId { get; set; }
-    public User User { get; set; } = default!;
+    public int DeviceId { get; set; }
+    public Device Device { get; set; }
 
     // QR value stored on the container
     public string QrCode { get; set; } = default!; // unique
@@ -30,5 +31,4 @@ public class WaterContainer
     // If CapacityOnly
     public decimal? MaxLiters { get; set; }
 
-    public ICollection<Log> Logs { get; set; } = new List<Log>();
 }

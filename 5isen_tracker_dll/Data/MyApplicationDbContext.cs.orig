@@ -1,31 +1,33 @@
+<<<<<<< HEAD
 ﻿using Microsoft.EntityFrameworkCore;
 using _5isen_tracker_dll.Models; // adjust if your namespace is different
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+=======
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+>>>>>>> main
 
 namespace _5isen_tracker_dll.Data;
 
-public class MyApplicationDbContext : IdentityDbContext
+public class MyApplicationDbContext : DbContext
 {
+<<<<<<< HEAD
     public MyApplicationDbContext(DbContextOptions<MyApplicationDbContext> options)
         : base(options) { }
 
-    //public DbSet<User> Users => Set<User>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<WaterContainer> WaterContainers => Set<WaterContainer>();
     public DbSet<Log> Logs => Set<Log>();
-    public DbSet<Device> Devices {  get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         // USERS
-        /*
         modelBuilder.Entity<User>(e =>
         {
             e.ToTable("users");
@@ -37,24 +39,8 @@ public class MyApplicationDbContext : IdentityDbContext
 
             e.HasIndex(x => x.Email).IsUnique();
         });
-        */
 
-        //DEVICES
-        modelBuilder.Entity<Device>(e => {
-
-            e.Property(d => d.NodeId)
-         .IsRequired()
-         .HasMaxLength(16);
-
-            e.HasCheckConstraint(
-                "ck_device_nodeid_len",
-                "length(\"NodeId\") = 16"
-            );
-
-        });
         // WATER CONTAINERS
-        
-
         modelBuilder.Entity<WaterContainer>(e =>
         {
             e.ToTable("water_containers", t =>
@@ -95,24 +81,17 @@ public class MyApplicationDbContext : IdentityDbContext
             e.Property(x => x.LengthCm).HasPrecision(8, 2);
             e.Property(x => x.WidthCm).HasPrecision(8, 2);
             e.Property(x => x.MaxLiters).HasPrecision(10, 2);
-            /*
+
             e.HasOne(x => x.User)
              .WithMany(u => u.WaterContainers)
              .HasForeignKey(x => x.UserId)
              .OnDelete(DeleteBehavior.Cascade);
-            */
-            //e.HasIndex(x => x.UserId);
 
-            e.HasOne(w => w.Device)
-             .WithOne(d => d.WaterContainer)
-             .HasForeignKey<WaterContainer>(w => w.DeviceId)
-             .OnDelete(DeleteBehavior.Cascade);
-
-            e.HasIndex(w => w.DeviceId).IsUnique();
+            e.HasIndex(x => x.UserId);
+           
         });
-        
+
         // LOGS
-        
         modelBuilder.Entity<Log>(e =>
         {
             e.ToTable("logs");
@@ -121,11 +100,6 @@ public class MyApplicationDbContext : IdentityDbContext
             e.Property(x => x.CreatedAt).IsRequired();
 
             e.Property(x => x.DistanceCm).HasPrecision(8, 2).IsRequired();
-
-            e.HasOne(x => x.Device)
-            .WithMany(x=>x.Logs)
-            .HasForeignKey(x => x.DeviceId);
-            /*
             e.Property(x => x.WaterHeightCm).HasPrecision(8, 2).IsRequired();
             e.Property(x => x.WaterPercent).HasPrecision(5, 2).IsRequired();
             e.Property(x => x.WaterLiters).HasPrecision(10, 2).IsRequired();
@@ -136,8 +110,12 @@ public class MyApplicationDbContext : IdentityDbContext
              .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(x => new { x.WaterContainerId, x.CreatedAt });
-            */
         });
-        
+=======
+    public class MyApplicationDbContext : IdentityDbContext
+    {
+        public MyApplicationDbContext(DbContextOptions<MyApplicationDbContext> options) : base(options) { }
+        public DbSet<WaterContainer> WaterContainers { get; set; }
+>>>>>>> main
     }
 }
