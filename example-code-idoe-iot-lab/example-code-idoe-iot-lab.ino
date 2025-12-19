@@ -126,7 +126,8 @@ void do_send(osjob_t* j) {
     Serial.println(F("OP_TXRXPEND, not sending"));
   } else {
     // Prepare upstream data transmission at the next possible time.
-    String message = "IoT is cool";
+    //String message = "IoT is cool";
+    String message = "10";
     message.getBytes(buffer, message.length() + 1);
     Serial.println("Sending: " + message);
     LMIC_setTxData2(1, (uint8_t*) buffer, message.length() , 0);

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "5isen_tracker_web_app", "5i
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "5isen_tracker_dll", "..\5isen_tracker_dll\5isen_tracker_dll.csproj", "{C34CC507-98D3-403F-A193-3AA0ECC4B5A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "5isen_tracker_API", "..\5isen_tracker_API\5isen_tracker_API.csproj", "{548CEAB5-4208-4BB4-85F2-F07B5544E1F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C34CC507-98D3-403F-A193-3AA0ECC4B5A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C34CC507-98D3-403F-A193-3AA0ECC4B5A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C34CC507-98D3-403F-A193-3AA0ECC4B5A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{548CEAB5-4208-4BB4-85F2-F07B5544E1F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{548CEAB5-4208-4BB4-85F2-F07B5544E1F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{548CEAB5-4208-4BB4-85F2-F07B5544E1F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{548CEAB5-4208-4BB4-85F2-F07B5544E1F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

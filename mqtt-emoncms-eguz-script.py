@@ -18,7 +18,7 @@ import psycopg2
 # -------------------------------
 conn = psycopg2.connect(
     host="localhost",     # ou l'IP du serveur PostgreSQL
-    database="IoTProject",
+    database="IoT",
     user="postgres",
     password="NoelNoel"
 )
@@ -48,7 +48,7 @@ def on_message(client, userdata, msg):
     devEUI = data['devEUI']
     nodeName = data['deviceName']
 
-    if 'data' not in data.keys():
+    if 'data' not in data.keys() or data['data'] is None:
         return 0
 
     decoded = base64.b64decode(data['data']).decode('utf-8', errors='ignore')
@@ -61,6 +61,8 @@ def on_message(client, userdata, msg):
         
     conn.commit()
     print("✅ Data inserted into PostgreSQL")
+    """
+    """
     #Partie pas obligatoire a faire , elle sert uniquement a envoyer les donne a EmonCMS un site web qui permet de visualier les données
     """
     #json_payload = base64.b64decode(data['data'])
