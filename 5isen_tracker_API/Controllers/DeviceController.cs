@@ -2,6 +2,7 @@
 using _5isen_tracker_dll.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace _5isen_tracker_API.Controllers
 {
@@ -25,7 +26,7 @@ namespace _5isen_tracker_API.Controllers
 
 
         [HttpPost("AddDevice")]
-        public IActionResult AddDevice(string nodeId)
+        public async Task<IActionResult> AddDevice(string nodeId)
         {
             string userId = "fbc7fc0c-b822-451b-a3a7-868193387ca5";
             var user = _db.Users.First(); 
