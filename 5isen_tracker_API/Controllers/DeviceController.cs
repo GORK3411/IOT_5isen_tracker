@@ -23,6 +23,7 @@ namespace _5isen_tracker_API.Controllers
             return _db.Devices.ToList();
         }
 
+
         [HttpPost("AddDevice")]
         public IActionResult AddDevice(string nodeId)
         {

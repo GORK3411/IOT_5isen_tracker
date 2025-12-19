@@ -12,18 +12,10 @@ from matplotlib.dates import DateFormatter
 import matplotlib.pyplot as plt
 import socket
 import psycopg2
+import requests
+import urllib3
 
-# -------------------------------
-# PostgreSQL connection
-# -------------------------------
-conn = psycopg2.connect(
-    host="localhost",     # ou l'IP du serveur PostgreSQL
-    database="IoT",
-    user="postgres",
-    password="NoelNoel"
-)
-cursor = conn.cursor()
-
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 mqtt_borker_address = "212.98.137.194"
 mqtt_port = 1883
@@ -40,10 +32,27 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     #0x79, 0x7F, 0x80, 0x83, 0xFD, 0x28, 0x64, 0x5B
-    client.subscribe("application/24/device/5b6428fd83807f79/rx") # remplacer par votre node-id
+    #client.subscribe("application/24/device/5b6428fd83807f79/rx") # remplacer par votre node-id
+
+    url = "https://localhost:7170/api/device"
+
+    response = requests.get(
+        url,
+        verify=False  # ⚠️ uniquement en DEV
+    )
+
+    if response.status_code == 200:
+        devices = response.json()
+        for d in devices:
+            nodeId = d["nodeId"]
+            print(nodeId)
+            client.subscribe(f"application/24/device/{nodeId}/rx") # remplacer par votre node-id
+        #print(devices)
+    else:
+        print("Erreur:", response.status_code, response.text)
 
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    #print(msg.topic+" "+str(msg.payload))
     data = json.loads(msg.payload)
     devEUI = data['devEUI']
     nodeName = data['deviceName']
@@ -52,15 +61,35 @@ def on_message(client, userdata, msg):
         return 0
 
     decoded = base64.b64decode(data['data']).decode('utf-8', errors='ignore')
-    print(decoded)
-    cursor.execute(
-    "INSERT INTO sensor_data(payload) VALUES(%s)",
-    (decoded,)
-    )
+    print(f"{devEUI} : {decoded}")
+    
 
+    url = "https://localhost:7170/api/log"
+    print(float(decoded))
+    payload = {
+        "nodeId": devEUI,
+        "distance": float(decoded)
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(
+        url,
+        json=payload,
+        headers=headers,
+        verify=False  # ⚠️ DEV seulement
+    )
+    try:
+        if response.status_code in (200, 201):
+            print("✅ Log saved:"+ response.text)
+        else:
+            print("❌ Error:", response.status_code, response.text)
+    except Exception as e:
+        print(e)
         
-    conn.commit()
-    print("✅ Data inserted into PostgreSQL")
+    #print("✅ Data inserted into PostgreSQL")
     """
     """
     #Partie pas obligatoire a faire , elle sert uniquement a envoyer les donne a EmonCMS un site web qui permet de visualier les données
