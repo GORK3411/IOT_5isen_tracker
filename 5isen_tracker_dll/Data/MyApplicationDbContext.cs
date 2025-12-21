@@ -1,24 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using _5isen_tracker_dll.Models; // adjust if your namespace is different
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using _5isen_tracker_dll.Models;
 
 namespace _5isen_tracker_dll.Data;
 
-public class MyApplicationDbContext : IdentityDbContext
+public class MyApplicationDbContext : DbContext
 {
     public MyApplicationDbContext(DbContextOptions<MyApplicationDbContext> options)
         : base(options) { }
 
-    //public DbSet<User> Users => Set<User>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<WaterContainer> WaterContainers => Set<WaterContainer>();
     public DbSet<Log> Logs => Set<Log>();
-    public DbSet<Device> Devices {  get; set; }
+    public DbSet<Device> Devices => Set<Device>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

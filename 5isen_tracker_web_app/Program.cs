@@ -1,7 +1,7 @@
-using _5isen_tracker_dll.Contents;
-using _5isen_tracker_dll.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using _5isen_tracker_dll.Data;
+using _5isen_tracker_dll.Repositories;
+using _5isen_tracker_dll.Repositories.Interfaces;
 
 namespace _5isen_tracker_web_app
 {
@@ -11,41 +11,34 @@ namespace _5isen_tracker_web_app
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // MVC
             builder.Services.AddControllersWithViews();
 
+            // DB
             var connectionString = builder.Configuration.GetConnectionString("Default");
 
             builder.Services.AddDbContext<MyApplicationDbContext>(options =>
-                options.UseNpgsql(
-                    connectionString,
-                    b => b.MigrationsAssembly("5isen_tracker_dll")
-                )
+                options.UseNpgsql(connectionString, b => b.MigrationsAssembly("5isen_tracker_dll"))
             );
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-            {
-                options.SignIn.RequireConfirmedAccount = false;
-            })
-            //.AddRoles<IdentityRole>() // we don't have roles
-            .AddEntityFrameworkStores<MyApplicationDbContext>(); ;
-
+            // Repositories
+            builder.Services.AddScoped<IUserRepos, UserRepositories>();
+            builder.Services.AddScoped<IWaterContainer, WaterContainerRepositories>();
+            builder.Services.AddScoped<ILogRepos, LogRepositories>();
 
             var app = builder.Build();
 
-            // ✅ Seed database (only in Development)
+            // Optional: seed (custom seeding only)
             if (app.Environment.IsDevelopment())
             {
                 using var scope = app.Services.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
-                await DbSeeder.SeedAsync(db);
-                
-                var serviceProvider = scope.ServiceProvider.GetRequiredService<IServiceProvider>();
-                UserSeeder.SeeUsersAsync(serviceProvider);
 
+                // If you have a custom seeder that uses db.Users/db.WaterContainers/db.Logs, call it here:
+                // await DbSeeder.SeedAsync(db);
             }
 
-            // Configure the HTTP request pipeline.
+            // Pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -53,26 +46,18 @@ namespace _5isen_tracker_web_app
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
             app.UseRouting();
 
+            // If you later add auth, you'll add app.UseAuthentication() before UseAuthorization()
             app.UseAuthorization();
-
-            app.MapStaticAssets();
-
-            app.MapRazorPages();
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                UserSeeder.SeeUsersAsync(services).Wait();
-            }
-
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

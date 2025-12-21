@@ -6,6 +6,9 @@ namespace _5isen_tracker_dll.Models;
 public class WaterContainer
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
+    public User User { get; set; } = default!;
+
 
     // Owner (since only 1 user can own a container)
     public int DeviceId { get; set; }
