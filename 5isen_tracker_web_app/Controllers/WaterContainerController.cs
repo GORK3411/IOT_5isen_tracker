@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using _5isen_tracker_dll.Services;
-using _5isen_tracker_web_app.Models.Ui;
 using _5isen_tracker_dll.Data;
 using _5isen_tracker_dll.Models;
-using _5isen_tracker_dll.Repositories;
 using _5isen_tracker_dll.Repositories.Interfaces;
+
+using _5isen_tracker_web_app.Models.Ui;
 
 namespace _5isen_tracker_web_app.Controllers;
 
@@ -19,7 +19,10 @@ public class WaterContainerController : Controller
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IWaterContainer _waterContainerRepositories;
 
-    public WaterContainerController(MyApplicationDbContext db, UserManager<IdentityUser> userManager,IWaterContainer waterContainer)
+    public WaterContainerController(
+        MyApplicationDbContext db,
+        UserManager<IdentityUser> userManager,
+        IWaterContainer waterContainer)
     {
         _db = db;
         _userManager = userManager;
@@ -31,19 +34,25 @@ public class WaterContainerController : Controller
         var user = await _userManager.GetUserAsync(User);
         var uid = user!.Id;
 
-        var containers = await _db.WaterContainers
-            .Include(w => w.Device)
-                //.ThenInclude(d => d.Logs)
+        // ✅ Recommended: fetch only the LAST log per container (DB does the work)
+        var items = await _db.WaterContainers
             .Where(w => w.UserId == uid)
             .OrderBy(w => w.Name)
+            .Select(w => new
+            {
+                Container = w,
+                LastLog = w.Device.Logs
+                    .OrderByDescending(l => l.CreatedAt)
+                    .FirstOrDefault()
+            })
             .ToListAsync();
 
         var vm = new WaterContainerIndexModel();
 
-        foreach (var c in containers)
+        foreach (var item in items)
         {
-            var logs = c.Device?.Logs ?? new List<Log>();
-            var lastLog = logs.OrderByDescending(l => l.CreatedAt).FirstOrDefault();
+            var c = item.Container;
+            var lastLog = item.LastLog;
 
             var distance = lastLog?.DistanceCm ?? 0m;
             var (_, percent, liters) = WaterCalcService.Compute(c, distance);
@@ -62,6 +71,52 @@ public class WaterContainerController : Controller
         return View(vm);
     }
 
+    // ✅ NEW: History page (last 7 days chart)
+    [HttpGet]
+    public async Task<IActionResult> History(int id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        var uid = user!.Id;
+
+        // Verify ownership + get the container
+        var container = await _db.WaterContainers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(w => w.Id == id && w.UserId == uid);
+
+        if (container == null)
+            return NotFound();
+
+        var fromUtc = DateTime.UtcNow.AddDays(-7);
+
+        // Get logs for last 7 days
+        var logs = await _db.Logs
+            .AsNoTracking()
+            .Where(l => l.DeviceId == container.DeviceId && l.CreatedAt >= fromUtc)
+            .OrderBy(l => l.CreatedAt)
+            .ToListAsync();
+
+        var vm = new HistoryViewModel
+        {
+            ContainerId = container.Id,
+            ContainerName = container.Name,
+            LastUpdateUtc = logs.LastOrDefault()?.CreatedAt
+        };
+
+        foreach (var log in logs)
+        {
+            var (_, percent, liters) = WaterCalcService.Compute(container, log.DistanceCm);
+
+            // label example: "Sun 21:30"
+            vm.Labels.Add(log.CreatedAt.ToLocalTime().ToString("ddd HH:mm"));
+            vm.Percents.Add(percent);
+            vm.Liters.Add(liters);
+        }
+
+        return View(vm);
+    }
+
+    // -------- PAIR --------
+
     [HttpGet]
     public IActionResult Pair() => View();
 
@@ -75,47 +130,14 @@ public class WaterContainerController : Controller
             waterContainer.Device = GetDeviceByNodeId(nodeId);
             waterContainer.User = await _userManager.GetUserAsync(User);
             waterContainer.Name = "A";
+
             await _waterContainerRepositories.AddAsync(waterContainer);
             return Ok();
-
         }
-        catch(Exception e)
+        catch
         {
             return BadRequest();
         }
-        string code = "";
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            TempData["Err"] = "Invalid QR code.";
-            return RedirectToAction(nameof(Pair));
-        }
-
-        var user = await _userManager.GetUserAsync(User);
-        var uid = user!.Id;
-        return Ok();
-        /*
-        var container = await _db.WaterContainers
-            .Include(w => w.Device)
-            .FirstOrDefaultAsync(w => w.QrCode == code);
-
-        if (container == null)
-        {
-            TempData["Err"] = "No container found for this QR code.";
-            return RedirectToAction(nameof(Pair));
-        }
-
-        if (!string.IsNullOrEmpty(container.Device.UserId) && container.Device.UserId != uid)
-        {
-            TempData["Err"] = "This container is already paired to another user.";
-            return RedirectToAction(nameof(Pair));
-        }
-
-        container.Device.UserId = uid;
-        await _db.SaveChangesAsync();
-
-        // After pairing, go configure it (professional flow)
-        return RedirectToAction(nameof(Edit), new { id = container.Id });
-        */
     }
 
     // -------- EDIT --------
@@ -168,7 +190,6 @@ public class WaterContainerController : Controller
         c.HeightCm = vm.HeightCm;
         c.Shape = vm.Shape;
 
-        // Clear shape fields then re-apply
         c.RadiusCm = null;
         c.LengthCm = null;
         c.WidthCm = null;
@@ -194,8 +215,6 @@ public class WaterContainerController : Controller
 
     private Device GetDeviceByNodeId(string nodeId)
     {
-        var d = _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
-        return d;
-        
+        return _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
     }
 }

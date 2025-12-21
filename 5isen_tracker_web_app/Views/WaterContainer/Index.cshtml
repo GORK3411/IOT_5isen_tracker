@@ -80,7 +80,6 @@ else
                         <div class="infoGrid">
                             <div class="infoBox">
                                 <div class="k">Sensor distance</div>
-                                <!-- FIXED: ToString is inside the Razor expression -->
                                 <div class="v">@($"{c.LastDistanceCm:0.##}") cm</div>
                             </div>
                             <div class="infoBox">
@@ -93,7 +92,21 @@ else
 
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="small-muted">Configure tank dimensions and shape.</div>
-                            <a class="btn btn-soft btn-sm" asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-soft btn-sm"
+                                   asp-controller="WaterContainer"
+                                   asp-action="History"
+                                   asp-route-id="@c.Id">
+                                    History
+                                </a>
+
+                                <a class="btn btn-soft btn-sm"
+                                   asp-action="Edit"
+                                   asp-route-id="@c.Id">
+                                    Edit
+                                </a>
+                            </div>
                         </div>
 
                     </div>
