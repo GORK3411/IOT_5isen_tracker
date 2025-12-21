@@ -27,6 +27,13 @@
 
 #define LMIC_DEBUG_LEVEL 2
 
+//Ports for ultrasonic
+const int trigPin = 4;
+const int echoPin = 5;
+
+float duration, distance; 
+
+
 // Change this!
 // This should be in little endian format.
 static const u1_t PROGMEM DEVEUI[8] = {0x79, 0x7F, 0x80, 0x83, 0xFD, 0x28, 0x64, 0x5B};
@@ -125,9 +132,12 @@ void do_send(osjob_t* j) {
   if (LMIC.opmode & OP_TXRXPEND) {
     Serial.println(F("OP_TXRXPEND, not sending"));
   } else {
+
+   
     // Prepare upstream data transmission at the next possible time.
     //String message = "IoT is cool";
-    String message = "10";
+    getDistance();
+    String message = String(distance);//"10";
     message.getBytes(buffer, message.length() + 1);
     Serial.println("Sending: " + message);
     LMIC_setTxData2(1, (uint8_t*) buffer, message.length() , 0);
@@ -143,6 +153,9 @@ void os_getArtEui (u1_t* buf) {
 }
 
 void setup() {
+
+  pinMode(trigPin, OUTPUT);  
+	pinMode(echoPin, INPUT);  
   Serial.begin(115200);
   Serial.println(F("Starting"));
 
@@ -184,4 +197,19 @@ void setup() {
 
 void loop() {
   os_runloop_once();
+
+}
+
+void getDistance()
+{
+  digitalWrite(trigPin, LOW);  
+	delayMicroseconds(2);  
+	digitalWrite(trigPin, HIGH);  
+	delayMicroseconds(10);  
+	digitalWrite(trigPin, LOW); 
+  duration = pulseIn(echoPin, HIGH); 
+  distance = (duration*.0343)/2;
+  Serial.print("Distance: ");  
+	Serial.println(distance);  
+	
 }
