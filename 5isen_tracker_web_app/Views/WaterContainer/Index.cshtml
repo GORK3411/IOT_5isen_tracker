@@ -1,0 +1,104 @@
+@model _5isen_tracker_web_app.Models.Ui.WaterContainerIndexModel
+
+@functions{
+    (string label, string dot) Status(decimal percent)
+    {
+        if (percent <= 10) return ("Critical", "danger");
+        if (percent <= 30) return ("Low", "warn");
+        return ("OK", "ok");
+    }
+}
+
+<div class="page-head">
+    <div>
+        <div class="small-muted page-kicker">Overview</div>
+        <h1 class="page-title">Your Containers</h1>
+        <p class="page-sub">Quick status of water levels across all connected tanks.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <!-- Dashboard moved here -->
+        <a class="btn btn-soft" asp-controller="WaterContainer" asp-action="Index">Dashboard</a>
+
+        <!-- Add container -->
+        <a class="btn btn-primary" asp-action="Pair">+ Add container</a>
+    </div>
+</div>
+
+@if (Model.Containers.Count == 0)
+{
+    <div class="card-app">
+        <div class="card-ribbon"></div>
+        <div class="p-4">
+            <div class="fw-bold fs-4 mb-1">No containers yet</div>
+            <div class="small-muted mb-3">Pair your first container using its QR code.</div>
+            <a class="btn btn-primary" asp-action="Pair">Pair a container</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var c in Model.Containers)
+        {
+            var st = Status(c.Percent);
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card-app h-100">
+                    <div class="card-ribbon"></div>
+                    <div class="p-4">
+
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <div class="fw-bold fs-4">@c.Name</div>
+                            </div>
+
+                            <div class="pill">
+                                <span class="dot @st.dot"></span>
+                                @st.label • @c.Percent.ToString("0.#")%
+                            </div>
+                        </div>
+
+                        <div class="tankRow">
+                            <div class="tank">
+                                <div class="water" style="height:@c.Percent.ToString("0.#")%"></div>
+                            </div>
+
+                            <div>
+                                <div class="small-muted">Estimated liters</div>
+                                <div class="big-number">@c.Liters.ToString("0.##") L</div>
+
+                                <div class="small-muted mt-2">
+                                    Last update:
+                                    <span class="strong">
+                                        @(c.LastUpdateUtc?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="infoGrid">
+                            <div class="infoBox">
+                                <div class="k">Sensor distance</div>
+                                <!-- FIXED: ToString is inside the Razor expression -->
+                                <div class="v">@($"{c.LastDistanceCm:0.##}") cm</div>
+                            </div>
+                            <div class="infoBox">
+                                <div class="k">Fill</div>
+                                <div class="v">@c.Percent.ToString("0.#")%</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3 hr-soft" />
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="small-muted">Configure tank dimensions and shape.</div>
+                            <a class="btn btn-soft btn-sm" asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -11,41 +11,53 @@ namespace _5isen_tracker_web_app
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // MVC + Views
             builder.Services.AddControllersWithViews();
 
+            // Identity uses Razor Pages endpoints
+            builder.Services.AddRazorPages();
+
             var connectionString = builder.Configuration.GetConnectionString("Default");
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Missing connection string: ConnectionStrings:Default");
 
             builder.Services.AddDbContext<MyApplicationDbContext>(options =>
-                options.UseNpgsql(
-                    connectionString,
-                    b => b.MigrationsAssembly("5isen_tracker_dll")
-                )
+                options.UseNpgsql(connectionString, b => b.MigrationsAssembly("5isen_tracker_dll"))
             );
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-            {
-                options.SignIn.RequireConfirmedAccount = false;
-            })
-            //.AddRoles<IdentityRole>() // we don't have roles
-            .AddEntityFrameworkStores<MyApplicationDbContext>(); ;
-
+            builder.Services
+                .AddDefaultIdentity<IdentityUser>(options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = false;
+                })
+                .AddEntityFrameworkStores<MyApplicationDbContext>();
 
             var app = builder.Build();
 
             // ✅ Seed database (only in Development)
+            //hone if (app.Environment.IsDevelopment())
+            // {
+            //     using var scope = app.Services.CreateScope();
+            //     var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
+            //     await DbSeeder.SeedAsync(db);
+
+            //     // seed users (make sure this method is async and awaited)
+            //     await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
+            // }hone
             if (app.Environment.IsDevelopment())
-            {
-                using var scope = app.Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
-                await DbSeeder.SeedAsync(db);
-                
-                var serviceProvider = scope.ServiceProvider.GetRequiredService<IServiceProvider>();
-                UserSeeder.SeeUsersAsync(serviceProvider);
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
 
-            }
+    // ✅ This creates/updates tables from your migrations (AspNetUsers etc.)
+    await db.Database.MigrateAsync();
 
-            // Configure the HTTP request pipeline.
+    // ✅ Now seed (won’t crash because tables exist)
+    await DbSeeder.SeedAsync(db);
+    await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
+}
+
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -53,24 +65,18 @@ namespace _5isen_tracker_web_app
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
-            app.MapStaticAssets();
 
             app.MapRazorPages();
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
-
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                UserSeeder.SeeUsersAsync(services).Wait();
-            }
+                pattern: "{controller=Account}/{action=Login}/{id?}");
 
             app.Run();
         }

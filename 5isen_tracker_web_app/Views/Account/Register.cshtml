@@ -1,0 +1,73 @@
+@model _5isen_tracker_web_app.Models.Ui.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-left">
+            <div class="brand">
+                <div class="drop"></div>
+                <div>
+                    <div class="brand-title">5isen Tracker</div>
+                    <div class="brand-sub">Smart water level monitoring</div>
+                </div>
+            </div>
+
+            <h1>Create your account</h1>
+            <p class="muted">Start tracking your water usage today !</p>
+
+            <form asp-action="Register" method="post" class="auth-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div asp-validation-summary="ModelOnly" class="val"></div>
+
+                <label>Email</label>
+                <input asp-for="Email" placeholder="you@domain.com" />
+                <span asp-validation-for="Email" class="val"></span>
+
+                <label>Password</label>
+                <input asp-for="Password" placeholder="Minimum 6 characters" />
+                <span asp-validation-for="Password" class="val"></span>
+
+                <label>Confirm password</label>
+                <input asp-for="ConfirmPassword" placeholder="Repeat password" />
+                <span asp-validation-for="ConfirmPassword" class="val"></span>
+
+                <button class="btn-main" type="submit">Create account</button>
+
+                <div class="auth-switch">
+                    Already have an account?
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="auth-right">
+            <div class="phone">
+                <div class="phone-top"></div>
+                <div class="phone-content">
+                    <div class="bubble">
+                        <div class="b-title">Pair a container</div>
+                        <div class="b-sub">Scan QR → set dimensions → start receiving logs</div>
+                    </div>
+                    <div class="wave"></div>
+                </div>
+            </div>
+
+            <div class="hint">
+                <div class="hint-dot"></div>
+                <div>
+                    <div class="hint-title">No more guessing</div>
+                    <div class="hint-sub">Register now so you never run out of water again !</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

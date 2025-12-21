@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Add Container";
+}
+
+<div class="pair-wrap">
+    <!-- Top row -->
+    <div class="pair-top">
+        <a class="btn btn-soft btn-sm pair-back" asp-controller="WaterContainer" asp-action="Index">
+            ← Back
+        </a>
+
+        <div class="pair-title">
+            <div class="pair-kicker">Connect a new device</div>
+            <h1 class="pair-h1">Add Container</h1>
+            <div class="pair-sub">Scan the QR code on the tank (or paste it below).</div>
+        </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="pair-card">
+        <div class="pair-left">
+            <div class="pair-icon">🔗</div>
+            <div class="pair-left-title">Pair in seconds</div>
+            <div class="pair-left-sub">
+                Your container will appear on the dashboard as soon as it’s linked to your account.
+            </div>
+
+            <div class="pair-tips">
+                <div class="tip">
+                    <div class="tip-dot"></div>
+                    <div>
+                        <div class="tip-title">Tip</div>
+                        <div class="tip-text">QR codes usually look like <span class="mono">TESTQR123</span>.</div>
+                    </div>
+                </div>
+                <div class="tip">
+                    <div class="tip-dot"></div>
+                    <div>
+                        <div class="tip-title">No scan?</div>
+                        <div class="tip-text">You can paste the code manually here.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pair-right">
+            @if (TempData["Err"] != null)
+            {
+                <div class="alert alert-danger mb-3">
+                    @TempData["Err"]
+                </div>
+            }
+
+            <form asp-action="Pair" method="post" class="pair-form">
+                @Html.AntiForgeryToken()
+
+                <label class="pair-label" for="code">QR Code</label>
+                <input id="code" name="code" class="pair-input" placeholder="TESTQR123" autocomplete="off" />
+
+                <button type="submit" class="btn btn-primary w-100 pair-btn">
+                    Pair container
+                </button>
+
+                <div class="pair-foot">
+                    After pairing, it will appear on your dashboard.
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
