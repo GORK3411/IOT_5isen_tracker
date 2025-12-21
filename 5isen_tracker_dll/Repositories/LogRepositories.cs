@@ -35,4 +35,14 @@ public class LogRepositories : ILogRepos
             .OrderByDescending(l => l.CreatedAt)
             .Take(take)
             .ToListAsync();
+
+            public Task<List<Log>> GetForContainerBetweenAsync(int waterContainerId, DateTime from, DateTime to)
+    => _db.Logs
+        .AsNoTracking()
+        .Where(l => l.WaterContainerId == waterContainerId &&
+                    l.CreatedAt >= from &&
+                    l.CreatedAt <= to)
+        .OrderBy(l => l.CreatedAt) // ASC for history curve
+        .ToListAsync();
+
 }
