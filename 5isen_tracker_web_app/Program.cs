@@ -45,17 +45,19 @@ namespace _5isen_tracker_web_app
             //     await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
             // }hone
             if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
+            {
+                /*
+                */
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<MyApplicationDbContext>();
 
-    // ✅ This creates/updates tables from your migrations (AspNetUsers etc.)
-    await db.Database.MigrateAsync();
+                // ✅ This creates/updates tables from your migrations (AspNetUsers etc.)
+                await db.Database.MigrateAsync();
 
-    // ✅ Now seed (won’t crash because tables exist)
-    await DbSeeder.SeedAsync(db);
-    await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
-}
+                // ✅ Now seed (won’t crash because tables exist)
+                await DbSeeder.SeedAsync(db);
+                await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
+            }
 
 
             if (!app.Environment.IsDevelopment())

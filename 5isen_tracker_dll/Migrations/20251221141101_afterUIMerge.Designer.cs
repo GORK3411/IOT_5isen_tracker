@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using _5isen_tracker_dll.Data;
@@ -11,9 +12,11 @@ using _5isen_tracker_dll.Data;
 namespace _5isen_tracker_dll.Migrations
 {
     [DbContext(typeof(MyApplicationDbContext))]
-    partial class MyApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251221141101_afterUIMerge")]
+    partial class afterUIMerge
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

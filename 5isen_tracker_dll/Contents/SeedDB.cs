@@ -51,6 +51,7 @@ public static class DbSeeder
         // =========================
         // LOGS
         // =========================
+        
         if (!await db.Logs.AnyAsync())
         {
             // Récupérer tous les devices existants
@@ -113,6 +114,7 @@ public static class DbSeeder
             await db.WaterContainers.AddRangeAsync(containers);
             await db.SaveChangesAsync();
         }
+        
 
     }
 
