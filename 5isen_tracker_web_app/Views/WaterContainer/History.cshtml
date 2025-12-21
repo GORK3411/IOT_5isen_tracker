@@ -1,0 +1,74 @@
+@model _5isen_tracker_web_app.Models.Ui.HistoryViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "History";
+    var labelsJson = JsonSerializer.Serialize(Model.Labels);
+    var percentsJson = JsonSerializer.Serialize(Model.Percents);
+    var litersJson = JsonSerializer.Serialize(Model.Liters);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-1">@Model.ContainerName</h2>
+        <div class="text-muted">
+            Last 7 days
+            @if (Model.LastUpdateUtc != null)
+            {
+                <span> • Last update: @Model.LastUpdateUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+            }
+        </div>
+    </div>
+
+    <a class="btn btn-outline-light" asp-controller="WaterContainer" asp-action="Index">
+        Back
+    </a>
+</div>
+
+<div class="card p-3" style="background: transparent; border: 1px solid rgba(255,255,255,.15);">
+    <canvas id="historyChart" height="600"></canvas>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const labels = @Html.Raw(labelsJson);
+        const percents = @Html.Raw(percentsJson);
+        const liters = @Html.Raw(litersJson);
+
+        const ctx = document.getElementById("historyChart").getContext("2d");
+
+        // Default dataset = percent (like a price chart)
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Water Level (%)",
+                        data: percents,
+                        tension: 0.35,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: {
+                    x: {
+                        ticks: { maxRotation: 0, autoSkip: true }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+}

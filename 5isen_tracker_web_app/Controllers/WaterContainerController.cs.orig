@@ -344,11 +344,15 @@ public class WaterContainerController : Controller
 
     private Device GetDeviceByNodeId(string nodeId)
     {
+<<<<<<< HEAD
         var d = _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
         return d;
 
+=======
+        return _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
+>>>>>>> main
     }
-
+    
     [HttpGet]
     public async Task<IActionResult> StatusJson()
     {
