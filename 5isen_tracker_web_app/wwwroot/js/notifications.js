@@ -1,19 +1,20 @@
 (function () {
-  const THRESHOLDS = [20, 10, 5];
-  const POLL_MS = 30000; // 30s (change to 60000 for 1 min)
+  const THRESHOLDS = [20, 10, 5]; // ordered high -> low doesn't matter, we’ll pick min crossed
+  const POLL_MS = 30000; // 30s
 
-  function key(containerId, threshold) {
-    return `wc:${containerId}:armed:${threshold}`;
+  function lastKey(containerId) {
+    return `wc:${containerId}:lastPercent`;
   }
 
-  function isArmed(containerId, threshold) {
-    const v = localStorage.getItem(key(containerId, threshold));
-    // default = armed (true) so first time it can notify when it drops
-    return v === null ? true : v === "true";
+  function getLastPercent(containerId) {
+    const v = localStorage.getItem(lastKey(containerId));
+    if (v === null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   }
 
-  function setArmed(containerId, threshold, val) {
-    localStorage.setItem(key(containerId, threshold), val ? "true" : "false");
+  function setLastPercent(containerId, percent) {
+    localStorage.setItem(lastKey(containerId), String(percent));
   }
 
   function notify(title, body) {
@@ -29,47 +30,53 @@
   function checkThresholds(container) {
     const id = container.id;
     const name = container.name;
-    const percent = Number(container.percent);
+    const curr = Number(container.percent);
 
-    THRESHOLDS.forEach((t) => {
-      // re-arm when back above threshold
-      if (percent > t) {
-        setArmed(id, t, true);
-        return;
-      }
+    if (!Number.isFinite(curr)) return;
 
-      // crossing detected (armed and now <= threshold)
-      if (isArmed(id, t) && percent <= t) {
-        notify(
-          `⚠️ ${name}: Low water`,
-          `Water level is ${percent.toFixed(1)}% (≤ ${t}%).`
-        );
-        setArmed(id, t, false);
-      }
-    });
+    const prev = getLastPercent(id);
+
+    // ✅ First time seeing this container in this browser: DO NOT notify
+    // just store baseline to avoid refresh spam.
+    if (prev === null) {
+      setLastPercent(id, curr);
+      return;
+    }
+
+    // Find all crossed thresholds: prev > T && curr <= T
+    const crossed = THRESHOLDS.filter((t) => prev > t && curr <= t);
+
+    if (crossed.length > 0) {
+      // ✅ Only notify once: the MOST critical threshold (smallest T)
+      const t = Math.min(...crossed);
+
+      notify(
+        `⚠️ ${name}: Low water`,
+        `Water level is ${curr.toFixed(1)}% (≤ ${t}%).`
+      );
+    }
+
+    // Update last seen percent
+    setLastPercent(id, curr);
   }
 
   async function tick() {
     try {
       const containers = await fetchStatus();
       containers.forEach(checkThresholds);
-    } catch (e) {
-      // silent fail (no console spam)
+    } catch {
+      // silent
     }
   }
 
   async function init() {
     if (!("Notification" in window)) return;
 
-    // Ask permission once
     if (Notification.permission === "default") {
       await Notification.requestPermission();
     }
-
-    // Only run if allowed
     if (Notification.permission !== "granted") return;
 
-    // Run immediately + then every POLL_MS
     await tick();
     setInterval(tick, POLL_MS);
   }

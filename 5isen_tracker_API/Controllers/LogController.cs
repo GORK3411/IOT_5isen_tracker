@@ -12,10 +12,11 @@ namespace _5isen_tracker_API.Controllers
     public class LogController : ControllerBase
     {
         MyApplicationDbContext _db;
-        public LogController(MyApplicationDbContext db) 
+        public LogController(MyApplicationDbContext db)
         {
             this._db = db;
         }
+        
 
         [HttpPost]
         public IActionResult Post([FromBody]DeviceLogDto deviceLog)
