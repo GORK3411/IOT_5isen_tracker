@@ -7,6 +7,8 @@ using _5isen_tracker_dll.Services;
 using _5isen_tracker_web_app.Models.Ui;
 using _5isen_tracker_dll.Data;
 using _5isen_tracker_dll.Models;
+using _5isen_tracker_dll.Repositories;
+using _5isen_tracker_dll.Repositories.Interfaces;
 
 namespace _5isen_tracker_web_app.Controllers;
 
@@ -15,11 +17,13 @@ public class WaterContainerController : Controller
 {
     private readonly MyApplicationDbContext _db;
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly IWaterContainer _waterContainerRepositories;
 
-    public WaterContainerController(MyApplicationDbContext db, UserManager<IdentityUser> userManager)
+    public WaterContainerController(MyApplicationDbContext db, UserManager<IdentityUser> userManager,IWaterContainer waterContainer)
     {
         _db = db;
         _userManager = userManager;
+        _waterContainerRepositories = waterContainer;
     }
 
     public async Task<IActionResult> Index()
@@ -29,7 +33,7 @@ public class WaterContainerController : Controller
 
         var containers = await _db.WaterContainers
             .Include(w => w.Device)
-                .ThenInclude(d => d.Logs)
+                //.ThenInclude(d => d.Logs)
             .Where(w => w.UserId == uid)
             .OrderBy(w => w.Name)
             .ToListAsync();
@@ -63,8 +67,23 @@ public class WaterContainerController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Pair(string code)
+    public async Task<IActionResult> Pair(string nodeId)
     {
+        try
+        {
+            var waterContainer = new WaterContainer();
+            waterContainer.Device = GetDeviceByNodeId(nodeId);
+            waterContainer.User = await _userManager.GetUserAsync(User);
+            waterContainer.Name = "A";
+            await _waterContainerRepositories.AddAsync(waterContainer);
+            return Ok();
+
+        }
+        catch(Exception e)
+        {
+            return BadRequest();
+        }
+        string code = "";
         if (string.IsNullOrWhiteSpace(code))
         {
             TempData["Err"] = "Invalid QR code.";
@@ -171,5 +190,12 @@ public class WaterContainerController : Controller
 
         TempData["Ok"] = "Container updated.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private Device GetDeviceByNodeId(string nodeId)
+    {
+        var d = _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
+        return d;
+        
     }
 }

@@ -1,7 +1,6 @@
 @{
     ViewData["Title"] = "Add Container";
 }
-
 <div class="pair-wrap">
     <!-- Top row -->
     <div class="pair-top">
@@ -55,7 +54,7 @@
                 @Html.AntiForgeryToken()
 
                 <label class="pair-label" for="code">QR Code</label>
-                <input id="code" name="code" class="pair-input" placeholder="TESTQR123" autocomplete="off" />
+                <input id="code" name="nodeId" class="pair-input" placeholder="TESTQR123" autocomplete="off" />
 
                 <button type="submit" class="btn btn-primary w-100 pair-btn">
                     Pair container
