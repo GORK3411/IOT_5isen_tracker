@@ -1,0 +1,85 @@
+@model _5isen_tracker_web_app.Models.Ui.LoginModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-left">
+            <div class="brand">
+                <div class="drop"></div>
+                <div>
+                    <div class="brand-title">5isen Tracker</div>
+                    <div class="brand-sub">Smart water level monitoring</div>
+                </div>
+            </div>
+
+            <h1>Welcome back</h1>
+            <p class="muted">Track your tanks like a real app — clean, fast, and reliable.</p>
+
+            <form asp-action="Login" method="post" class="auth-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div asp-validation-summary="ModelOnly" class="val"></div>
+
+                <label>Email</label>
+                <input asp-for="Email" placeholder="you@domain.com" />
+                <span asp-validation-for="Email" class="val"></span>
+
+                <label>Password</label>
+                <input asp-for="Password" placeholder="••••••••" />
+                <span asp-validation-for="Password" class="val"></span>
+
+                <div class="row">
+                    <label class="check">
+                        <input asp-for="RememberMe" />
+                        <span>Remember me</span>
+                    </label>
+                    <span class="auth-switch">Water is life 💧</span>
+                </div>
+
+                <button class="btn-main" type="submit">Login</button>
+
+                <div class="auth-switch">
+                    New here?
+                    <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="auth-right">
+            <div class="phone">
+                <div class="phone-top"></div>
+                <div class="phone-content">
+                    <div class="tile">
+                        <div class="tile-title">Rooftop Tank</div>
+                        <div class="tile-sub">Last update: 2 min ago</div>
+                        <div class="mini-tank">
+                            <div class="mini-water" style="height:78%"></div>
+                        </div>
+                        <div class="tile-kpi">
+                            <div><div class="k">Fill</div><div class="v">78%</div></div>
+                            <div><div class="k">Liters</div><div class="v">1256</div></div>
+                        </div>
+                    </div>
+
+                    <div class="wave"></div>
+                </div>
+            </div>
+
+            <div class="hint">
+                <div class="hint-dot"></div>
+                <div>
+                    <div class="hint-title">Real container visuals</div>
+                    <div class="hint-sub">Each card shows a tank fill animation based on sensor logs.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

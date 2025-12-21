@@ -1,0 +1,94 @@
+@model _5isen_tracker_web_app.Models.Ui.WaterContainerEditVm
+@{
+    ViewData["Title"] = "Edit Container";
+}
+
+<div class="page-head">
+    <div>
+        <div class="small-muted" style="letter-spacing:.12em; text-transform:uppercase; font-weight:800; font-size:.75rem;">Container Settings</div>
+        <h1 class="page-title">Edit: @Model.Name</h1>
+        <p class="page-sub">Set dimensions so liters/percent calculations are accurate.</p>
+    </div>
+
+<a class="btn btn-soft btn-sm pair-back"
+   asp-controller="WaterContainer"
+   asp-action="Index">
+    ← Back
+</a>
+</div>
+
+<div class="card-app">
+    <div class="card-ribbon"></div>
+    <div class="p-4">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-3">
+                <label class="fw-bold">QR Code</label>
+                <input class="form-control" value="@Model.QrCode" disabled />
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Name</label>
+                <input class="form-control" asp-for="Name" />
+                <span asp-validation-for="Name" class="val"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Height (cm)</label>
+                <input class="form-control" asp-for="HeightCm" />
+                <span asp-validation-for="HeightCm" class="val"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Shape</label>
+                <select class="form-select" asp-for="Shape" asp-items="Html.GetEnumSelectList<_5isen_tracker_dll.Models.ContainerShape>()" id="shapeSelect"></select>
+            </div>
+
+            <div id="cylinderFields" class="mb-3">
+                <label class="fw-bold">Radius (cm)</label>
+                <input class="form-control" asp-for="RadiusCm" />
+                <span asp-validation-for="RadiusCm" class="val"></span>
+            </div>
+
+            <div id="rectFields" class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">Length (cm)</label>
+                    <input class="form-control" asp-for="LengthCm" />
+                    <span asp-validation-for="LengthCm" class="val"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold">Width (cm)</label>
+                    <input class="form-control" asp-for="WidthCm" />
+                    <span asp-validation-for="WidthCm" class="val"></span>
+                </div>
+            </div>
+
+            <div id="capFields" class="mb-3">
+                <label class="fw-bold">Max capacity (Liters)</label>
+                <input class="form-control" asp-for="MaxLiters" />
+                <span asp-validation-for="MaxLiters" class="val"></span>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit">Save changes</button>
+                <a class="btn btn-soft" asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function refreshFields() {
+            const s = document.getElementById("shapeSelect").value;
+            document.getElementById("cylinderFields").style.display = (s.includes("Cylinder") || s === "1") ? "block" : "none";
+            document.getElementById("rectFields").style.display = (s.includes("Rectangular") || s === "2") ? "flex" : "none";
+            document.getElementById("capFields").style.display = (s.includes("CapacityOnly") || s === "3") ? "block" : "none";
+        }
+        document.getElementById("shapeSelect").addEventListener("change", refreshFields);
+        refreshFields();
+    </script>
+}
