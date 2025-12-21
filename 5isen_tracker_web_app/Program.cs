@@ -1,7 +1,9 @@
-using _5isen_tracker_dll.Contents;
-using _5isen_tracker_dll.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using _5isen_tracker_dll.Data;
+using _5isen_tracker_dll.Repositories;
+using _5isen_tracker_dll.Repositories.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using _5isen_tracker_dll.Contents;
 
 namespace _5isen_tracker_web_app
 {
@@ -16,7 +18,7 @@ namespace _5isen_tracker_web_app
 
             // Identity uses Razor Pages endpoints
             builder.Services.AddRazorPages();
-
+            // DB
             var connectionString = builder.Configuration.GetConnectionString("Default");
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new InvalidOperationException("Missing connection string: ConnectionStrings:Default");
@@ -32,7 +34,7 @@ namespace _5isen_tracker_web_app
                 })
                 .AddEntityFrameworkStores<MyApplicationDbContext>();
 
-            var app = builder.Build();
+
 
             // ✅ Seed database (only in Development)
             //hone if (app.Environment.IsDevelopment())
@@ -44,6 +46,14 @@ namespace _5isen_tracker_web_app
             //     // seed users (make sure this method is async and awaited)
             //     await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
             // }hone
+            // Repositories
+            builder.Services.AddScoped<IUserRepos, UserRepositories>();
+            builder.Services.AddScoped<IWaterContainer, WaterContainerRepositories>();
+            builder.Services.AddScoped<ILogRepos, LogRepositories>();
+
+            var app = builder.Build();
+
+            // Optional: seed (custom seeding only)
             if (app.Environment.IsDevelopment())
             {
                 /*
@@ -57,6 +67,9 @@ namespace _5isen_tracker_web_app
                 // ✅ Now seed (won’t crash because tables exist)
                 await DbSeeder.SeedAsync(db);
                 await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
+
+                // If you have a custom seeder that uses db.Users/db.WaterContainers/db.Logs, call it here:
+                // await DbSeeder.SeedAsync(db);
             }
 
 
@@ -81,6 +94,16 @@ namespace _5isen_tracker_web_app
                 pattern: "{controller=Account}/{action=Login}/{id?}");
 
             app.Run();
+            // If you later add auth, you'll add app.UseAuthentication() before UseAuthorization()
+            /*
+            app.UseAuthorization();
+
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            await app.RunAsync();
+            */
         }
     }
 }

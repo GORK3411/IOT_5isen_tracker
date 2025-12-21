@@ -270,9 +270,14 @@ namespace _5isen_tracker_dll.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
 
+                    b.Property<int>("WaterContainerId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
+
+                    b.HasIndex("WaterContainerId");
 
                     b.ToTable("logs", (string)null);
                 });
@@ -315,6 +320,10 @@ namespace _5isen_tracker_dll.Migrations
                     b.Property<int>("Shape")
                         .HasColumnType("integer");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<decimal?>("WidthCm")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
@@ -326,6 +335,8 @@ namespace _5isen_tracker_dll.Migrations
 
                     b.HasIndex("QrCode")
                         .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("water_containers", null, t =>
                         {
@@ -405,7 +416,15 @@ namespace _5isen_tracker_dll.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("_5isen_tracker_dll.Models.WaterContainer", "WaterContainer")
+                        .WithMany()
+                        .HasForeignKey("WaterContainerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Device");
+
+                    b.Navigation("WaterContainer");
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.WaterContainer", b =>
@@ -416,7 +435,15 @@ namespace _5isen_tracker_dll.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Device");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.Device", b =>

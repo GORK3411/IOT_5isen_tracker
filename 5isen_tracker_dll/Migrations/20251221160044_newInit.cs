@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace _5isen_tracker_dll.Migrations
 {
     /// <inheritdoc />
-    public partial class test : Migration
+    public partial class newInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,21 +49,6 @@ namespace _5isen_tracker_dll.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FullName = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -173,12 +158,35 @@ namespace _5isen_tracker_dll.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Devices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    NodeId = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Devices", x => x.Id);
+                    table.CheckConstraint("ck_device_nodeid_len", "length(\"NodeId\") = 16");
+                    table.ForeignKey(
+                        name: "FK_Devices_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "water_containers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    DeviceId = table.Column<int>(type: "integer", nullable: false),
                     QrCode = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     HeightCm = table.Column<decimal>(type: "numeric(8,2)", precision: 8, scale: 2, nullable: false),
@@ -194,9 +202,15 @@ namespace _5isen_tracker_dll.Migrations
                     table.CheckConstraint("ck_wc_dims_by_shape", "\r\n                    (\r\n                        \"Shape\" = 1 AND \"RadiusCm\" IS NOT NULL\r\n                        AND \"LengthCm\" IS NULL AND \"WidthCm\" IS NULL AND \"MaxLiters\" IS NULL\r\n                    )\r\n                    OR\r\n                    (\r\n                        \"Shape\" = 2 AND \"LengthCm\" IS NOT NULL AND \"WidthCm\" IS NOT NULL\r\n                        AND \"RadiusCm\" IS NULL AND \"MaxLiters\" IS NULL\r\n                    )\r\n                    OR\r\n                    (\r\n                        \"Shape\" = 3 AND \"MaxLiters\" IS NOT NULL\r\n                        AND \"RadiusCm\" IS NULL AND \"LengthCm\" IS NULL AND \"WidthCm\" IS NULL\r\n                    )\r\n                    ");
                     table.CheckConstraint("ck_wc_height_positive", "\"HeightCm\" > 0");
                     table.ForeignKey(
-                        name: "FK_water_containers_users_UserId",
+                        name: "FK_water_containers_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "users",
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_water_containers_Devices_DeviceId",
+                        column: x => x.DeviceId,
+                        principalTable: "Devices",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -207,16 +221,20 @@ namespace _5isen_tracker_dll.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DeviceId = table.Column<int>(type: "integer", nullable: false),
                     WaterContainerId = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DistanceCm = table.Column<decimal>(type: "numeric(8,2)", precision: 8, scale: 2, nullable: false),
-                    WaterHeightCm = table.Column<decimal>(type: "numeric(8,2)", precision: 8, scale: 2, nullable: false),
-                    WaterPercent = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: false),
-                    WaterLiters = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false)
+                    DistanceCm = table.Column<decimal>(type: "numeric(8,2)", precision: 8, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_logs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_logs_Devices_DeviceId",
+                        column: x => x.DeviceId,
+                        principalTable: "Devices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_logs_water_containers_WaterContainerId",
                         column: x => x.WaterContainerId,
@@ -263,14 +281,24 @@ namespace _5isen_tracker_dll.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_logs_WaterContainerId_CreatedAt",
-                table: "logs",
-                columns: new[] { "WaterContainerId", "CreatedAt" });
+                name: "IX_Devices_UserId",
+                table: "Devices",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_users_Email",
-                table: "users",
-                column: "Email",
+                name: "IX_logs_DeviceId",
+                table: "logs",
+                column: "DeviceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_logs_WaterContainerId",
+                table: "logs",
+                column: "WaterContainerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_water_containers_DeviceId",
+                table: "water_containers",
+                column: "DeviceId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -310,13 +338,13 @@ namespace _5isen_tracker_dll.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
                 name: "water_containers");
 
             migrationBuilder.DropTable(
-                name: "users");
+                name: "Devices");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }

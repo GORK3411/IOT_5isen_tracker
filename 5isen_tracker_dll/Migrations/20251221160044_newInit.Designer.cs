@@ -12,8 +12,8 @@ using _5isen_tracker_dll.Data;
 namespace _5isen_tracker_dll.Migrations
 {
     [DbContext(typeof(MyApplicationDbContext))]
-    [Migration("20251217220119_test3")]
-    partial class test3
+    [Migration("20251221160044_newInit")]
+    partial class newInit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -238,7 +238,8 @@ namespace _5isen_tracker_dll.Migrations
 
                     b.Property<string>("NodeId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -248,7 +249,10 @@ namespace _5isen_tracker_dll.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Devices");
+                    b.ToTable("Devices", t =>
+                        {
+                            t.HasCheckConstraint("ck_device_nodeid_len", "length(\"NodeId\") = 16");
+                        });
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.Log", b =>
@@ -266,13 +270,19 @@ namespace _5isen_tracker_dll.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("DistanceCm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
+                    b.Property<int>("WaterContainerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
 
-                    b.ToTable("Logs");
+                    b.HasIndex("WaterContainerId");
+
+                    b.ToTable("logs", (string)null);
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.WaterContainer", b =>
@@ -283,14 +293,20 @@ namespace _5isen_tracker_dll.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("HeightCm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<decimal?>("LengthCm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<decimal?>("MaxLiters")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -301,7 +317,8 @@ namespace _5isen_tracker_dll.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal?>("RadiusCm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<int>("Shape")
                         .HasColumnType("integer");
@@ -311,13 +328,25 @@ namespace _5isen_tracker_dll.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal?>("WidthCm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeviceId")
+                        .IsUnique();
+
+                    b.HasIndex("QrCode")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("WaterContainers");
+                    b.ToTable("water_containers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_wc_dims_by_shape", "\r\n                    (\r\n                        \"Shape\" = 1 AND \"RadiusCm\" IS NOT NULL\r\n                        AND \"LengthCm\" IS NULL AND \"WidthCm\" IS NULL AND \"MaxLiters\" IS NULL\r\n                    )\r\n                    OR\r\n                    (\r\n                        \"Shape\" = 2 AND \"LengthCm\" IS NOT NULL AND \"WidthCm\" IS NOT NULL\r\n                        AND \"RadiusCm\" IS NULL AND \"MaxLiters\" IS NULL\r\n                    )\r\n                    OR\r\n                    (\r\n                        \"Shape\" = 3 AND \"MaxLiters\" IS NOT NULL\r\n                        AND \"RadiusCm\" IS NULL AND \"LengthCm\" IS NULL AND \"WidthCm\" IS NULL\r\n                    )\r\n                    ");
+
+                            t.HasCheckConstraint("ck_wc_height_positive", "\"HeightCm\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -390,16 +419,32 @@ namespace _5isen_tracker_dll.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("_5isen_tracker_dll.Models.WaterContainer", "WaterContainer")
+                        .WithMany()
+                        .HasForeignKey("WaterContainerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Device");
+
+                    b.Navigation("WaterContainer");
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.WaterContainer", b =>
                 {
+                    b.HasOne("_5isen_tracker_dll.Models.Device", "Device")
+                        .WithOne("WaterContainer")
+                        .HasForeignKey("_5isen_tracker_dll.Models.WaterContainer", "DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Device");
 
                     b.Navigation("User");
                 });
@@ -407,6 +452,9 @@ namespace _5isen_tracker_dll.Migrations
             modelBuilder.Entity("_5isen_tracker_dll.Models.Device", b =>
                 {
                     b.Navigation("Logs");
+
+                    b.Navigation("WaterContainer")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

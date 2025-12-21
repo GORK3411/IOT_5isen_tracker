@@ -1,0 +1,16 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+<<<<<<< HEAD
+    "Default": "Host=localhost;Port=5432;Database=IOT;Username=postgres;Password=NoelNoel"
+=======
+    "Default": "Host=localhost;Port=5433;Database=IoT;Username=postgres;Password=suissraa-25"
+>>>>>>> feature/repos
+  }
+}
