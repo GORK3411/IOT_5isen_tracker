@@ -34,8 +34,14 @@ public class WaterContainerController : Controller
         var user = await _userManager.GetUserAsync(User);
         var uid = user!.Id;
 
+<<<<<<< HEAD
         // ✅ Recommended: fetch only the LAST log per container (DB does the work)
         var items = await _db.WaterContainers
+=======
+        var containers = await _db.WaterContainers
+            .Include(w => w.Device)
+                .ThenInclude(d => d.Logs)
+>>>>>>> origin/dia-ui-fix-container
             .Where(w => w.UserId == uid)
             .OrderBy(w => w.Name)
             .Select(w => new
@@ -71,6 +77,7 @@ public class WaterContainerController : Controller
         return View(vm);
     }
 
+<<<<<<< HEAD
     // ✅ NEW: History page (last 7 days chart)
     [HttpGet]
     public async Task<IActionResult> History(int id)
@@ -116,6 +123,9 @@ public class WaterContainerController : Controller
     }
 
     // -------- PAIR --------
+=======
+    // ---------------- PAIR / CREATE ----------------
+>>>>>>> origin/dia-ui-fix-container
 
     [HttpGet]
     public IActionResult Pair(string? nodeId = null)
@@ -133,7 +143,7 @@ public class WaterContainerController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Pair(WaterContainerCreate vm)
     {
-        /*
+<<<<<<< HEAD
         try
         {
             var waterContainer = new WaterContainer();
@@ -145,7 +155,7 @@ public class WaterContainerController : Controller
             return Ok();
         }
         catch
-        */
+=======
         // Basic form validation
         if (!ModelState.IsValid)
             return View(vm);
@@ -153,10 +163,13 @@ public class WaterContainerController : Controller
         vm.NodeId = (vm.NodeId ?? "").Trim();
 
         if (string.IsNullOrWhiteSpace(vm.NodeId))
+>>>>>>> origin/dia-ui-fix-container
         {
             ModelState.AddModelError(nameof(vm.NodeId), "ArduinoID (NodeId) is required.");
             return View(vm);
         }
+<<<<<<< HEAD
+=======
 
         // Your DB has a CHECK constraint enforcing length=16 (ck_device_nodeid_len)
         if (vm.NodeId.Length != 16)
@@ -267,6 +280,7 @@ public class WaterContainerController : Controller
 
         TempData["Ok"] = "Container created successfully!";
         return RedirectToAction(nameof(Index));
+>>>>>>> origin/dia-ui-fix-container
     }
 
     // -------- EDIT --------
@@ -341,9 +355,12 @@ public class WaterContainerController : Controller
         TempData["Ok"] = "Container updated.";
         return RedirectToAction(nameof(Index));
     }
+<<<<<<< HEAD
 
     private Device GetDeviceByNodeId(string nodeId)
     {
         return _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
     }
+=======
+>>>>>>> origin/dia-ui-fix-container
 }
