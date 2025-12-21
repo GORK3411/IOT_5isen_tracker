@@ -196,6 +196,57 @@ public class WaterContainerController : Controller
     {
         var d = _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
         return d;
-        
+
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> StatusJson()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        var uid = user!.Id;
+
+        var items = await _db.WaterContainers
+            .Where(w => w.UserId == uid)
+            .OrderBy(w => w.Name)
+            .Select(w => new
+            {
+                id = w.Id,
+                name = w.Name,
+                lastDistance = w.Device.Logs
+                    .OrderByDescending(l => l.CreatedAt)
+                    .Select(l => (decimal?)l.DistanceCm)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        var result = items.Select(x =>
+        {
+            var distance = x.lastDistance ?? 0m;
+            var container = _db.WaterContainers.Local.FirstOrDefault(c => c.Id == x.id); // not reliable
+            return x;
+        }).ToList();
+
+        // ✅ Better: fetch containers once (no Local)
+        var containers = await _db.WaterContainers
+            .Where(w => w.UserId == uid)
+            .ToDictionaryAsync(w => w.Id);
+
+        var payload = items.Select(x =>
+        {
+            var c = containers[x.id];
+            var distance = x.lastDistance ?? 0m;
+            var (_, percent, liters) = WaterCalcService.Compute(c, distance);
+
+            return new
+            {
+                id = x.id,
+                name = x.name,
+                percent,
+                liters
+            };
+        });
+
+        return Json(payload);
+    }
+
 }
