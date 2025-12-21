@@ -13,9 +13,6 @@ public class WaterContainer
     public int DeviceId { get; set; }
     public Device Device { get; set; }
 
-    // QR value stored on the container
-    public string QrCode { get; set; } = default!; // unique
-
     public string Name { get; set; } = default!;
 
     // Ultrasonic mounted on top: inside height from sensor to bottom

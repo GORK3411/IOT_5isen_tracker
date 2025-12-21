@@ -12,8 +12,8 @@ using _5isen_tracker_dll.Data;
 namespace _5isen_tracker_dll.Migrations
 {
     [DbContext(typeof(MyApplicationDbContext))]
-    [Migration("20251221160044_newInit")]
-    partial class newInit
+    [Migration("20251221162912_removedFkLogWaterContainer")]
+    partial class removedFkLogWaterContainer
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -241,13 +241,7 @@ namespace _5isen_tracker_dll.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Devices", t =>
                         {
@@ -273,14 +267,9 @@ namespace _5isen_tracker_dll.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
 
-                    b.Property<int>("WaterContainerId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
-
-                    b.HasIndex("WaterContainerId");
 
                     b.ToTable("logs", (string)null);
                 });
@@ -312,10 +301,6 @@ namespace _5isen_tracker_dll.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("QrCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<decimal?>("RadiusCm")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
@@ -334,9 +319,6 @@ namespace _5isen_tracker_dll.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId")
-                        .IsUnique();
-
-                    b.HasIndex("QrCode")
                         .IsUnique();
 
                     b.HasIndex("UserId");
@@ -400,17 +382,6 @@ namespace _5isen_tracker_dll.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("_5isen_tracker_dll.Models.Device", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("_5isen_tracker_dll.Models.Log", b =>
                 {
                     b.HasOne("_5isen_tracker_dll.Models.Device", "Device")
@@ -419,15 +390,7 @@ namespace _5isen_tracker_dll.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("_5isen_tracker_dll.Models.WaterContainer", "WaterContainer")
-                        .WithMany()
-                        .HasForeignKey("WaterContainerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Device");
-
-                    b.Navigation("WaterContainer");
                 });
 
             modelBuilder.Entity("_5isen_tracker_dll.Models.WaterContainer", b =>

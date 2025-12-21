@@ -66,7 +66,7 @@ namespace _5isen_tracker_web_app
 
                 // ✅ Now seed (won’t crash because tables exist)
                 await DbSeeder.SeedAsync(db);
-                await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
+               // await UserSeeder.SeeUsersAsync(scope.ServiceProvider);
 
                 // If you have a custom seeder that uses db.Users/db.WaterContainers/db.Logs, call it here:
                 // await DbSeeder.SeedAsync(db);

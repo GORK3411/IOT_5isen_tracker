@@ -38,7 +38,7 @@ namespace _5isen_tracker_API.Controllers
             }
             try
             {
-                var device = new Device {NodeId = nodeId,User = user};
+                var device = new Device {NodeId = nodeId};
                 devices.Add(device);
                 _db.SaveChanges();
                 return Ok($"Device {nodeId} have been added");

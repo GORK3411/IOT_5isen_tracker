@@ -14,9 +14,6 @@ namespace _5isen_tracker_dll.Models
         [Required]
         [StringLength(16, MinimumLength = 16)]
         public string NodeId { get; set; }
-
-        public string UserId { get; set; }
-        public IdentityUser User { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // when device is create the datetime will be the current datetime
 
         public ICollection<Log> Logs { get; set; } = new List<Log>();

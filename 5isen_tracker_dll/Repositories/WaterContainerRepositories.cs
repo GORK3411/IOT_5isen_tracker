@@ -19,10 +19,6 @@ public class WaterContainerRepositories : IWaterContainer
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
 
-    public Task<WaterContainer?> GetByQrCodeAsync(string qrCode)
-        => _db.WaterContainers
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.QrCode == qrCode);
 
     public Task<List<WaterContainer>> GetByUserIdAsync(string userId)
         => _db.WaterContainers

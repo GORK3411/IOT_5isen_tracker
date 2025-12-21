@@ -76,8 +76,6 @@ public class MyApplicationDbContext : IdentityDbContext
             });
             e.HasKey(x => x.Id);
 
-            e.Property(x => x.QrCode).IsRequired();
-            e.HasIndex(x => x.QrCode).IsUnique();
 
             e.Property(x => x.Name).IsRequired();
             e.Property(x => x.HeightCm).HasPrecision(8, 2).IsRequired();

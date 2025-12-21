@@ -29,17 +29,15 @@ public static class DbSeeder
         new Device
         {
             NodeId = "5b6428fd83807f79", // déjà valide (16 chars)
-            UserId = RandomUser().Id
         },
         new Device
         {
             NodeId = GenerateNodeId(),
-            UserId = RandomUser().Id
         },
         new Device
         {
             NodeId = GenerateNodeId(),
-            UserId = RandomUser().Id
+           
         }
     };
 
@@ -99,7 +97,6 @@ public static class DbSeeder
                 .Select((device, index) => new WaterContainer
                 {
                     DeviceId = device.Id,
-                    QrCode = Guid.NewGuid().ToString("N"),
                     Name = $"Container {index + 1}",
                     HeightCm = 120 + index * 10,
                     Shape = index % 2 == 0
@@ -107,7 +104,8 @@ public static class DbSeeder
                         : ContainerShape.Rectangular,
                     RadiusCm = index % 2 == 0 ? 35 : null,
                     LengthCm = index % 2 != 0 ? 100 : null,
-                    WidthCm = index % 2 != 0 ? 60 : null
+                    WidthCm = index % 2 != 0 ? 60 : null,
+                    User = RandomUser()
                 })
                 .ToList();
 

@@ -30,7 +30,7 @@ public class WaterContainerController : Controller
         var containers = await _db.WaterContainers
             .Include(w => w.Device)
                 .ThenInclude(d => d.Logs)
-            .Where(w => w.Device.UserId == uid)
+            .Where(w => w.UserId == uid)
             .OrderBy(w => w.Name)
             .ToListAsync();
 
@@ -48,7 +48,6 @@ public class WaterContainerController : Controller
             {
                 Id = c.Id,
                 Name = c.Name,
-                QrCode = c.QrCode,
                 Percent = percent,
                 Liters = liters,
                 LastDistanceCm = distance,
@@ -74,7 +73,8 @@ public class WaterContainerController : Controller
 
         var user = await _userManager.GetUserAsync(User);
         var uid = user!.Id;
-
+        return Ok();
+        /*
         var container = await _db.WaterContainers
             .Include(w => w.Device)
             .FirstOrDefaultAsync(w => w.QrCode == code);
@@ -96,6 +96,7 @@ public class WaterContainerController : Controller
 
         // After pairing, go configure it (professional flow)
         return RedirectToAction(nameof(Edit), new { id = container.Id });
+        */
     }
 
     // -------- EDIT --------
@@ -111,13 +112,12 @@ public class WaterContainerController : Controller
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (c == null) return NotFound();
-        if (c.Device.UserId != uid) return Forbid();
+        if (c.UserId != uid) return Forbid();
 
         var vm = new WaterContainerEditVm
         {
             Id = c.Id,
             Name = c.Name,
-            QrCode = c.QrCode,
             HeightCm = c.HeightCm,
             Shape = c.Shape,
             RadiusCm = c.RadiusCm,
@@ -141,7 +141,7 @@ public class WaterContainerController : Controller
             .FirstOrDefaultAsync(x => x.Id == vm.Id);
 
         if (c == null) return NotFound();
-        if (c.Device.UserId != uid) return Forbid();
+        if (c.UserId != uid) return Forbid();
 
         if (!ModelState.IsValid) return View(vm);
 

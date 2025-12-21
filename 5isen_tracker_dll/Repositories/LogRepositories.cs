@@ -21,25 +21,25 @@ public class LogRepositories : ILogRepos
         return log;
     }
 
-    public Task<Log?> GetLatestForContainerAsync(int waterContainerId)
+    public Task<Log?> GetLatestForContainerAsync(int deviceId)
         => _db.Logs
             .AsNoTracking()
-            .Where(l => l.WaterContainerId == waterContainerId)
+            .Where(l => l.DeviceId == deviceId)
             .OrderByDescending(l => l.CreatedAt)
             .FirstOrDefaultAsync();
 
-    public Task<List<Log>> GetForContainerAsync(int waterContainerId, int take = 100)
+    public Task<List<Log>> GetForContainerAsync(int deviceId, int take = 100)
         => _db.Logs
             .AsNoTracking()
-            .Where(l => l.WaterContainerId == waterContainerId)
+            .Where(l => l.DeviceId == deviceId)
             .OrderByDescending(l => l.CreatedAt)
             .Take(take)
             .ToListAsync();
 
-            public Task<List<Log>> GetForContainerBetweenAsync(int waterContainerId, DateTime from, DateTime to)
+            public Task<List<Log>> GetForContainerBetweenAsync(int deviceId, DateTime from, DateTime to)
     => _db.Logs
         .AsNoTracking()
-        .Where(l => l.WaterContainerId == waterContainerId &&
+        .Where(l => l.DeviceId == deviceId &&
                     l.CreatedAt >= from &&
                     l.CreatedAt <= to)
         .OrderBy(l => l.CreatedAt) // ASC for history curve

@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace _5isen_tracker_dll.Migrations
 {
     /// <inheritdoc />
-    public partial class newInit : Migration
+    public partial class moveUserFkDeviceToWaterContainer : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,6 +49,21 @@ namespace _5isen_tracker_dll.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Devices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    NodeId = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Devices", x => x.Id);
+                    table.CheckConstraint("ck_device_nodeid_len", "length(\"NodeId\") = 16");
                 });
 
             migrationBuilder.CreateTable(
@@ -158,28 +173,6 @@ namespace _5isen_tracker_dll.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Devices",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    NodeId = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                    UserId = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Devices", x => x.Id);
-                    table.CheckConstraint("ck_device_nodeid_len", "length(\"NodeId\") = 16");
-                    table.ForeignKey(
-                        name: "FK_Devices_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "water_containers",
                 columns: table => new
                 {
@@ -187,7 +180,6 @@ namespace _5isen_tracker_dll.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     DeviceId = table.Column<int>(type: "integer", nullable: false),
-                    QrCode = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     HeightCm = table.Column<decimal>(type: "numeric(8,2)", precision: 8, scale: 2, nullable: false),
                     Shape = table.Column<int>(type: "integer", nullable: false),
@@ -281,11 +273,6 @@ namespace _5isen_tracker_dll.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Devices_UserId",
-                table: "Devices",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_logs_DeviceId",
                 table: "logs",
                 column: "DeviceId");
@@ -299,12 +286,6 @@ namespace _5isen_tracker_dll.Migrations
                 name: "IX_water_containers_DeviceId",
                 table: "water_containers",
                 column: "DeviceId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_water_containers_QrCode",
-                table: "water_containers",
-                column: "QrCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -341,10 +322,10 @@ namespace _5isen_tracker_dll.Migrations
                 name: "water_containers");
 
             migrationBuilder.DropTable(
-                name: "Devices");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Devices");
         }
     }
 }
