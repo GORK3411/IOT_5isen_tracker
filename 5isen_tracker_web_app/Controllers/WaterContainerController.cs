@@ -7,7 +7,6 @@ using _5isen_tracker_dll.Services;
 using _5isen_tracker_web_app.Models.Ui;
 using _5isen_tracker_dll.Data;
 using _5isen_tracker_dll.Models;
-using _5isen_tracker_dll.Repositories;
 using _5isen_tracker_dll.Repositories.Interfaces;
 
 namespace _5isen_tracker_web_app.Controllers;
@@ -19,7 +18,10 @@ public class WaterContainerController : Controller
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IWaterContainer _waterContainerRepositories;
 
-    public WaterContainerController(MyApplicationDbContext db, UserManager<IdentityUser> userManager,IWaterContainer waterContainer)
+    public WaterContainerController(
+        MyApplicationDbContext db,
+        UserManager<IdentityUser> userManager,
+        IWaterContainer waterContainer)
     {
         _db = db;
         _userManager = userManager;
@@ -33,7 +35,7 @@ public class WaterContainerController : Controller
 
         var containers = await _db.WaterContainers
             .Include(w => w.Device)
-                //.ThenInclude(d => d.Logs)
+                .ThenInclude(d => d.Logs)
             .Where(w => w.UserId == uid)
             .OrderBy(w => w.Name)
             .ToListAsync();
@@ -62,60 +64,145 @@ public class WaterContainerController : Controller
         return View(vm);
     }
 
+    // ---------------- PAIR / CREATE ----------------
+
     [HttpGet]
-    public IActionResult Pair() => View();
+    public IActionResult Pair(string? nodeId = null)
+    {
+        var vm = new WaterContainerCreate
+        {
+            NodeId = nodeId ?? "",
+            Shape = ContainerShape.Cylinder
+        };
+
+        return View(vm);
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Pair(string nodeId)
+    public async Task<IActionResult> Pair(WaterContainerCreate vm)
     {
-        try
-        {
-            var waterContainer = new WaterContainer();
-            waterContainer.Device = GetDeviceByNodeId(nodeId);
-            waterContainer.User = await _userManager.GetUserAsync(User);
-            waterContainer.Name = "A";
-            await _waterContainerRepositories.AddAsync(waterContainer);
-            return Ok();
+        // Basic form validation
+        if (!ModelState.IsValid)
+            return View(vm);
 
-        }
-        catch(Exception e)
+        vm.NodeId = (vm.NodeId ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(vm.NodeId))
         {
-            return BadRequest();
+            ModelState.AddModelError(nameof(vm.NodeId), "ArduinoID (NodeId) is required.");
+            return View(vm);
         }
-        string code = "";
-        if (string.IsNullOrWhiteSpace(code))
+
+        // Your DB has a CHECK constraint enforcing length=16 (ck_device_nodeid_len)
+        if (vm.NodeId.Length != 16)
         {
-            TempData["Err"] = "Invalid QR code.";
-            return RedirectToAction(nameof(Pair));
+            ModelState.AddModelError(nameof(vm.NodeId), "ArduinoID (NodeId) must be exactly 16 characters.");
+            return View(vm);
+        }
+
+        if (vm.HeightCm <= 0)
+        {
+            ModelState.AddModelError(nameof(vm.HeightCm), "Height must be greater than 0.");
+            return View(vm);
         }
 
         var user = await _userManager.GetUserAsync(User);
         var uid = user!.Id;
-        return Ok();
-        /*
-        var container = await _db.WaterContainers
-            .Include(w => w.Device)
-            .FirstOrDefaultAsync(w => w.QrCode == code);
 
-        if (container == null)
+        // 1) Find device OR CREATE it if missing
+        var device = await _db.Devices.FirstOrDefaultAsync(d => d.NodeId == vm.NodeId);
+        if (device == null)
         {
-            TempData["Err"] = "No container found for this QR code.";
-            return RedirectToAction(nameof(Pair));
+            device = new Device
+            {
+                NodeId = vm.NodeId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Devices.Add(device);
+            await _db.SaveChangesAsync(); // so device.Id is generated
         }
 
-        if (!string.IsNullOrEmpty(container.Device.UserId) && container.Device.UserId != uid)
+        // 2) DeviceId is UNIQUE in water_containers -> prevent duplicate container per device
+        var existing = await _db.WaterContainers.FirstOrDefaultAsync(w => w.DeviceId == device.Id);
+        if (existing != null)
         {
-            TempData["Err"] = "This container is already paired to another user.";
-            return RedirectToAction(nameof(Pair));
+            if (existing.UserId == uid)
+                return RedirectToAction(nameof(Edit), new { id = existing.Id });
+
+            ModelState.AddModelError(nameof(vm.NodeId), "This device is already paired to another account.");
+            return View(vm);
         }
 
-        container.Device.UserId = uid;
-        await _db.SaveChangesAsync();
+        // 3) Validate shape fields (to satisfy ck_wc_dims_by_shape)
+        if (vm.Shape == ContainerShape.Cylinder)
+        {
+            if (vm.RadiusCm == null || vm.RadiusCm <= 0)
+            {
+                ModelState.AddModelError(nameof(vm.RadiusCm), "Radius is required for Cylinder and must be > 0.");
+                return View(vm);
+            }
+        }
+        else if (vm.Shape == ContainerShape.Rectangular)
+        {
+            if (vm.LengthCm == null || vm.LengthCm <= 0)
+            {
+                ModelState.AddModelError(nameof(vm.LengthCm), "Length is required for Rectangular and must be > 0.");
+                return View(vm);
+            }
+            if (vm.WidthCm == null || vm.WidthCm <= 0)
+            {
+                ModelState.AddModelError(nameof(vm.WidthCm), "Width is required for Rectangular and must be > 0.");
+                return View(vm);
+            }
+        }
+        else if (vm.Shape == ContainerShape.CapacityOnly)
+        {
+            if (vm.MaxLiters == null || vm.MaxLiters <= 0)
+            {
+                ModelState.AddModelError(nameof(vm.MaxLiters), "Max Liters is required for CapacityOnly and must be > 0.");
+                return View(vm);
+            }
+        }
 
-        // After pairing, go configure it (professional flow)
-        return RedirectToAction(nameof(Edit), new { id = container.Id });
-        */
+        // 4) Create container from form
+        var waterContainer = new WaterContainer
+        {
+            DeviceId = device.Id,
+            UserId = uid,
+
+            Name = vm.Name,
+            HeightCm = vm.HeightCm,
+            Shape = vm.Shape,
+
+            // clear first (VERY IMPORTANT for DB constraint)
+            RadiusCm = null,
+            LengthCm = null,
+            WidthCm = null,
+            MaxLiters = null
+        };
+
+        // apply only matching fields
+        if (vm.Shape == ContainerShape.Cylinder)
+        {
+            waterContainer.RadiusCm = vm.RadiusCm;
+        }
+        else if (vm.Shape == ContainerShape.Rectangular)
+        {
+            waterContainer.LengthCm = vm.LengthCm;
+            waterContainer.WidthCm = vm.WidthCm;
+        }
+        else if (vm.Shape == ContainerShape.CapacityOnly)
+        {
+            waterContainer.MaxLiters = vm.MaxLiters;
+        }
+
+        // Save (repo or db – keep your repo)
+        await _waterContainerRepositories.AddAsync(waterContainer);
+
+        TempData["Ok"] = "Container created successfully!";
+        return RedirectToAction(nameof(Index));
     }
 
     // -------- EDIT --------
@@ -168,7 +255,6 @@ public class WaterContainerController : Controller
         c.HeightCm = vm.HeightCm;
         c.Shape = vm.Shape;
 
-        // Clear shape fields then re-apply
         c.RadiusCm = null;
         c.LengthCm = null;
         c.WidthCm = null;
@@ -190,12 +276,5 @@ public class WaterContainerController : Controller
 
         TempData["Ok"] = "Container updated.";
         return RedirectToAction(nameof(Index));
-    }
-
-    private Device GetDeviceByNodeId(string nodeId)
-    {
-        var d = _db.Devices.FirstOrDefault(x => x.NodeId == nodeId);
-        return d;
-        
     }
 }

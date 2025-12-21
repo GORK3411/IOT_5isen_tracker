@@ -1,69 +1,143 @@
+@model _5isen_tracker_web_app.Models.Ui.WaterContainerCreate
+
 @{
     ViewData["Title"] = "Add Container";
 }
+
 <div class="pair-wrap">
-    <!-- Top row -->
     <div class="pair-top">
         <a class="btn btn-soft btn-sm pair-back" asp-controller="WaterContainer" asp-action="Index">
             ← Back
         </a>
 
         <div class="pair-title">
-            <div class="pair-kicker">Connect a new device</div>
-            <h1 class="pair-h1">Add Container</h1>
-            <div class="pair-sub">Scan the QR code on the tank (or paste it below).</div>
+            <div class="pair-kicker">Add a new container</div>
+            <h1 class="pair-h1">Container Setup</h1>
+            <div class="pair-sub">Enter the Device ArduinoID and configure the tank dimensions.</div>
         </div>
     </div>
 
-    <!-- Main card -->
     <div class="pair-card">
         <div class="pair-left">
-            <div class="pair-icon">🔗</div>
-            <div class="pair-left-title">Pair in seconds</div>
+            <div class="pair-icon">💧</div>
+            <div class="pair-left-title">Water is Life</div>
             <div class="pair-left-sub">
-                Your container will appear on the dashboard as soon as it’s linked to your account.
+                Add your new container !
             </div>
 
             <div class="pair-tips">
                 <div class="tip">
                     <div class="tip-dot"></div>
                     <div>
-                        <div class="tip-title">Tip</div>
-                        <div class="tip-text">QR codes usually look like <span class="mono">TESTQR123</span>.</div>
+                        <div class="tip-title">ArduinoID</div>
+                        <div class="tip-text">Exactly 16 characters (you can find it on your arduino or scan the QR code)</div>
                     </div>
                 </div>
                 <div class="tip">
                     <div class="tip-dot"></div>
                     <div>
-                        <div class="tip-title">No scan?</div>
-                        <div class="tip-text">You can paste the code manually here.</div>
+                        <div class="tip-title">Shape</div>
+                        <div class="tip-text">Only fill the fields matching the selected shape.</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="pair-right">
-            @if (TempData["Err"] != null)
+            @if (TempData["Ok"] != null)
             {
-                <div class="alert alert-danger mb-3">
-                    @TempData["Err"]
-                </div>
+                <div class="alert alert-success mb-3">@TempData["Ok"]</div>
             }
+
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
             <form asp-action="Pair" method="post" class="pair-form">
                 @Html.AntiForgeryToken()
 
-                <label class="pair-label" for="code">QR Code</label>
-                <input id="code" name="nodeId" class="pair-input" placeholder="TESTQR123" autocomplete="off" />
+                <label class="pair-label" asp-for="NodeId"></label>
+                <input class="pair-input" asp-for="NodeId" placeholder="TESTNODE0000000001" autocomplete="off" />
+                <span class="text-danger" asp-validation-for="NodeId"></span>
 
-                <button type="submit" class="btn btn-primary w-100 pair-btn">
-                    Pair container
+                <label class="pair-label mt-2" asp-for="Name"></label>
+                <input class="pair-input" asp-for="Name" placeholder="Kitchen Tank" autocomplete="off" />
+                <span class="text-danger" asp-validation-for="Name"></span>
+
+                <label class="pair-label mt-2" asp-for="HeightCm"></label>
+                <input class="pair-input" asp-for="HeightCm" placeholder="120" />
+                <span class="text-danger" asp-validation-for="HeightCm"></span>
+
+                <label class="pair-label mt-2" asp-for="Shape"></label>
+                <select class="pair-input" asp-for="Shape" id="shapeSelect">
+                    <option value="Cylinder">Cylinder</option>
+                    <option value="Rectangular">Rectangular</option>
+                    <option value="CapacityOnly">CapacityOnly</option>
+                </select>
+
+                <hr class="my-3" />
+
+                <div class="small-muted mb-2" style="font-weight:800;">Dimensions (based on shape)</div>
+
+                <!-- CYLINDER -->
+                <div class="shape-fields" data-shape="Cylinder">
+                    <label class="pair-label" asp-for="RadiusCm">Radius (Cylinder)</label>
+                    <input class="pair-input" asp-for="RadiusCm" placeholder="e.g. 25" />
+                    <span class="text-danger" asp-validation-for="RadiusCm"></span>
+                </div>
+
+                <!-- RECTANGULAR -->
+                <div class="shape-fields" data-shape="Rectangular">
+                    <label class="pair-label mt-2" asp-for="LengthCm">Length (Rectangular)</label>
+                    <input class="pair-input" asp-for="LengthCm" placeholder="e.g. 80" />
+                    <span class="text-danger" asp-validation-for="LengthCm"></span>
+
+                    <label class="pair-label mt-2" asp-for="WidthCm">Width (Rectangular)</label>
+                    <input class="pair-input" asp-for="WidthCm" placeholder="e.g. 60" />
+                    <span class="text-danger" asp-validation-for="WidthCm"></span>
+                </div>
+
+                <!-- CAPACITY ONLY -->
+                <div class="shape-fields" data-shape="CapacityOnly">
+                    <label class="pair-label mt-2" asp-for="MaxLiters">Max Liters (CapacityOnly)</label>
+                    <input class="pair-input" asp-for="MaxLiters" placeholder="e.g. 500" />
+                    <span class="text-danger" asp-validation-for="MaxLiters"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 pair-btn mt-2">
+                    Create Container
                 </button>
 
                 <div class="pair-foot">
-                    After pairing, it will appear on your dashboard.
+                    After creating, it will appear on your dashboard.
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const select = document.getElementById('shapeSelect');
+            const groups = document.querySelectorAll('.shape-fields');
+
+            function applyShape() {
+                const shape = select.value;
+
+                groups.forEach(g => {
+                    const match = g.getAttribute('data-shape') === shape;
+                    g.style.display = match ? '' : 'none';
+
+                    // Clear hidden inputs so they don't break DB check constraint
+                    if (!match) {
+                        g.querySelectorAll('input').forEach(inp => inp.value = '');
+                    }
+                });
+            }
+
+            applyShape();
+            select.addEventListener('change', applyShape);
+        })();
+    </script>
+}
