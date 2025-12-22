@@ -1,7 +1,7 @@
 (function () {
   const THRESHOLDS = [20, 10, 5]; // ordered high -> low doesn't matter, we’ll pick min crossed
   const POLL_MS = 30000; // 30s
-
+    let done = false;
   function lastKey(containerId) {
     return `wc:${containerId}:lastPercent`;
   }
@@ -27,7 +27,9 @@
     return await res.json();
   }
 
-  function checkThresholds(container) {
+    function checkThresholds(container) {
+        if (done)
+            return;
     const id = container.id;
     const name = container.name;
     const curr = Number(container.percent);
@@ -53,14 +55,16 @@
       notify(
         `⚠️ ${name}: Low water`,
         `Water level is ${curr.toFixed(1)}% (≤ ${t}%).`
-      );
+        );
+        done = true;
     }
 
     // Update last seen percent
     setLastPercent(id, curr);
   }
 
-  async function tick() {
+    async function tick() {
+        done = false
     try {
       const containers = await fetchStatus();
       containers.forEach(checkThresholds);
